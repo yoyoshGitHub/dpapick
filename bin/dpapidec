@@ -45,7 +45,7 @@ if __name__ == "__main__":
     for b in args:
         blob = blob.DPAPIBlob(open(b, 'rb').read())
 
-        print "BLOB GUID=%r" % blob.mkguid
+        print >> sys.stderr, "BLOB GUID=%r" % blob.mkguid
 
         mks = mkp.getMasterKeys(blob.mkguid)
 
@@ -53,8 +53,8 @@ if __name__ == "__main__":
           print >> sys.stderr, "Master key not found for blob %s (guid=%r)" % (b, blob.guids)
           continue
 
-        print "Found %i keys:" % len(mks)
-        print "Attempting to unlock with password:"
+        print >> sys.stderr, "Found %i keys:" % len(mks)
+        print >> sys.stderr, "Attempting to unlock with password:"
         for mk in mks:
             mk.decryptWithPassword(options.sid, options.password)
             if mk.decrypted:
@@ -63,23 +63,29 @@ if __name__ == "__main__":
             for mk in mks:
                 credent = chf.entries.get(mk.credhist.guid)
                 if credent is not None:
-                    print "--- cred entry matching:", mk.credhist.guid
-                    print repr(credent)
+                    print >> sys.stderr, "--- cred entry matching:", mk.credhist.guid
+                    print >> sys.stderr, repr(credent)
                     if credent.pwdhash is None:
-                        print "Alas, cred entry was not decrypted"
+                        print >> sys.stderr, "Alas, cred entry was not decrypted"
                     else:
                         break
             else:
                 print >> sys.stderr, "No credentials found to decrypt masterkeys"
                 continue
 
-            print "Attempt to decrypt masterkey:"
+            print >> sys.stderr, "Attempt to decrypt masterkey:"
             mk.decryptWithHash(str(credent.userSID), credent.pwdhash)
 
-        print repr(mk)
+        print >> sys.stderr, repr(mk)
 
-        print "Attempt to decrypt blob:"
+        print >> sys.stderr, "Attempt to decrypt blob:"
         blob.decrypt(mk.get_key(), options.entropy, options.strongpwd)
-        print repr(blob)
+        print >> sys.stderr, repr(blob)
+
+        if not blob.decrypted:
+          print >> sys.stderr, "Could not decrypt!"
+          exit(1)
+
+        sys.stdout.write(blob.cleartext)
 
 # vim:ts=4:expandtab:sw=4

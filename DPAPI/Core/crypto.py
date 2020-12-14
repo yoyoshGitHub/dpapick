@@ -174,6 +174,31 @@ def CryptSessionKeyWin7(masterkey, nonce, hashAlgo, entropy=None, strongPassword
     return digest.final()
 
 
+def CryptSessionKeyWin10(masterkey, nonce, hashAlgo, entropy=None, strongPassword=None):
+    """Computes the decryption key for 10 DPAPI blob, given the masterkey and optional information.
+
+    This implementation relies on an RFC compliant HMAC implementation
+    This algorithm is also used when checking the HMAC for integrity after decryption
+
+    :param masterkey: decrypted masterkey (should be 64 bytes long)
+    :param nonce: this is the nonce contained in the blob or the HMAC in the blob (integrity check)
+    :param entropy: this is the optional entropy from CryptProtectData() API
+    :param strongPassword: optional password used for decryption or the blob itself (integrity check)
+    :returns: decryption key
+    :rtype : str
+    """
+    if len(masterkey) != 20:
+        masterkey = hashlib.sha1(masterkey).digest()
+
+    digest = M2Crypto.EVP.HMAC(masterkey, hashAlgo.name)
+    digest.update(nonce)
+    if entropy is not None:
+        digest.update(entropy)
+    if strongPassword is not None:
+        digest.update(strongPassword)
+    return digest.final()
+
+
 def CryptDeriveKey(h, cipherAlgo, hashAlgo):
     """Internal use. Mimics the corresponding native Microsoft function"""
     if len(h) > hashAlgo.blockSize:
