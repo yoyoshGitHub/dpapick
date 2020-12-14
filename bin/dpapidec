@@ -19,6 +19,7 @@
 from DPAPI.Core import *
 import sys, os, re
 from optparse import OptionParser
+from base64 import b64decode
 
 
 if __name__ == "__main__":
@@ -30,6 +31,7 @@ if __name__ == "__main__":
     parser.add_option("--credhist", metavar="FILE", dest="credhist")
     parser.add_option("--wordlist", metavar="FILE", dest="wordlist")
     parser.add_option("--password", metavar="PASSWORD", dest="password")
+    parser.add_option("--base64", metavar="BASE64", dest="base64", type=bool, action="store_true")
 
     (options, args) = parser.parse_args()
 
@@ -43,7 +45,7 @@ if __name__ == "__main__":
             mkp.addMasterKey(mkdata)
 
     for b in args:
-        blob = blob.DPAPIBlob(open(b, 'rb').read())
+        blob = blob.DPAPIBlob(open(b, 'rb').read() if not options.base64 else b64decode(b))
 
         print >> sys.stderr, "BLOB GUID=%r" % blob.mkguid
 
