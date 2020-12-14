@@ -45,15 +45,13 @@ if __name__ == "__main__":
     for b in args:
         blob = blob.DPAPIBlob(open(b, 'rb').read())
 
-        print "BLOB GUID=%r" % blob.guids
-        for key_guid in blob.guids:
+        print "BLOB GUID=%r" % blob.mkguid
 
-            mks = mkp.getMasterKeys(key_guid)
-            if mks:
-                break
-        else:
-            print >> sys.stderr, "Master key not found for blob %s (guid=%r)" % (b, blob.guids)
-            continue
+        mks = mkp.getMasterKeys(blob.mkguid)
+
+        if not mks:
+          print >> sys.stderr, "Master key not found for blob %s (guid=%r)" % (b, blob.guids)
+          continue
 
         print "Found %i keys:" % len(mks)
         print "Attempting to unlock with password:"
